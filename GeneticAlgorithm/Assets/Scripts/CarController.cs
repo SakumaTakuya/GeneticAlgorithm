@@ -10,10 +10,13 @@ public class CarController : GeneticAlgorithmController<CarGene>
 	public static int ChromosomeLength = 100;
 	
 	[SerializeField] private int _maxGeneration = 100;
+	[SerializeField] private float _size = 20;
+	[SerializeField] private CarData _data;
 	
 	private readonly List<float> _rates = new List<float>();
 	private float _max;
-	
+	private List<Vector2> _points = new List<Vector2>();
+
 	private void Update()
 	{
 		if (Input.GetKeyDown(KeyCode.A))
@@ -27,22 +30,9 @@ public class CarController : GeneticAlgorithmController<CarGene>
 		return Generation == _maxGeneration || IsGoaled;
 	}
 
-	protected override List<CarGene> SelectChromosome(IList<Individual<CarGene>> individuals)
+	protected override List<CarGene>[] SelectChromosome(IList<Individual<CarGene>> individuals)
 	{
-		var val = Random.Range(0f,0.5f);
-		var totalRate = 0.0f;
-
-		for (var i = 0; i < individuals.Count; i++)
-		{
-			totalRate += _rates[i];
-			if (totalRate >= val)
-			{
-//				print("select:" + i + "_" + individuals[i].Fitness);
-				return individuals[i].Chromosome;
-			}
-		}
-		
-		return individuals[0].Chromosome;
+		return SelectRoulette(individuals, _rates, 0.5f);
 	}
 
 	protected override List<CarGene> Crossover(List<CarGene> dad, List<CarGene> mom)
@@ -87,7 +77,24 @@ public class CarController : GeneticAlgorithmController<CarGene>
 	
 	protected override void OnChangeNextGeneration(int generation)
 	{
+		_points.Add(new Vector2(Generation, _max));
 		print("Generation:" + generation);
 		print("max:" + _max);
+	}
+	
+	protected override void OnEndSimulation()
+	{
+		var max = CurrentGeneration.First(i => i.Fitness.Equals(CurrentGeneration.Max(j => j.Fitness)));
+		_data.Genes = max.Chromosome.ToArray();
+	}
+
+	private void OnGUI()
+	{
+		foreach (var point in _points)
+		{
+			GUI.Label(new Rect(point.x, 400 - point.y * _size,50,50), "o");	
+			
+		}
+		
 	}
 }

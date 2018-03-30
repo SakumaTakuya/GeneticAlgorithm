@@ -16,12 +16,12 @@ public class OneMaxIndividual : Individual<int>
 		}
 	}
 
-	protected override void Reset()
+	protected override void ResetIndividual()
 	{
 		
 	}
 
-	protected override float Action(int gene)
+	protected override float Phenotype(int gene)
 	{
 		GoNext();
 		return gene;

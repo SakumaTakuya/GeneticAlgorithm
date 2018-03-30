@@ -28,7 +28,7 @@ public class CarIndividual : Individual<CarGene>
 		}
 	}
 
-	protected override void Reset()
+	protected override void ResetIndividual()
 	{
 		_isDead = false;
 		//print(_num + ":" + Chromosome.Count);
@@ -42,7 +42,7 @@ public class CarIndividual : Individual<CarGene>
 		//print("reset");
 	}
 
-	protected override float Action(CarGene gene)
+	protected override float Phenotype(CarGene gene)
 	{
 		if (_isDead)
 		{

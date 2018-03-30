@@ -25,21 +25,9 @@ public class OneMaxController : GeneticAlgorithmController<int>
 		return Generation == _maxGeneration || _max == ChromosomeLength;
 	}
 
-	protected override List<int> SelectChromosome(IList<Individual<int>> individuals)
-	{		
-		var val = Random.value;
-		var totalRate = 0.0f;
-
-		for (var i = 0; i < individuals.Count; i++)
-		{
-			totalRate += _rates[i];
-			if (totalRate >= val)
-			{
-				return individuals[i].Chromosome;
-			}
-		}
-		
-		return individuals[0].Chromosome;
+	protected override List<int>[] SelectChromosome(IList<Individual<int>> individuals)
+	{
+		return SelectRoulette(individuals, _rates, 1f);
 	}
 
 	protected override List<int> Crossover(List<int> dad, List<int> mom)

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace GeneticAlgorithm
 {
@@ -31,13 +30,14 @@ namespace GeneticAlgorithm
 				var ind = Instantiate(individual);
 				//print(ind);
 				ind.Initialize(i);
+				//ind.name = individual.name + i;
 				CurrentGeneration.Add(ind);
 			}
 		}
 
 		protected IEnumerator Play()
 		{
-			while (!Convergence())
+			while (true)
 			{
 				var results = new List<Individual<TGene>>();
 				
@@ -57,24 +57,33 @@ namespace GeneticAlgorithm
 				
 				OnEndPlaying(results);
 				
+				if(Convergence()) break;
+				
 				//次世代の子孫を作成
 				//実装上は新しい染色体を作成して各個体に割り当てている(これはDestroyが重いため)
+				var newChromosomes = new List<TGene>[_poplation];
 				for (var i = 0; i < _poplation; i++)
 				{
-					List<TGene> child;
+					
 					if (i < _keepNumber)
 					{
-						child = results[i].Chromosome;
+						newChromosomes[i] = new List<TGene>(results[i].Chromosome);
 					}
 					else
 					{
-						var dad = SelectChromosome(results);
-						var mom = SelectChromosome(results);				
-						child = Crossover(dad, mom);
-						Mutate(ref child);
+						var parents = SelectChromosome(results);
+						//var dad = new List<TGene>(parents[0]);
+						//print(parents[0][0].GetHashCode() + "," + new List<TGene>(parents[0])[0].GetHashCode() + "," + dad[0].GetHashCode());
+						newChromosomes[i] = Crossover(parents[0], parents[1]);
+						//print("pre:" + CurrentGeneration[i].name + newChromosomes[i][0] + "\ndad:" + parents[0][0] + "\nmom:" + parents[1][0]);
+						Mutate(ref newChromosomes[i]);
 					}
-
-					CurrentGeneration[i].Chromosome = child;
+				}
+				
+				for (var i = 0; i < _poplation; i++)
+				{
+					CurrentGeneration[i].Chromosome = newChromosomes[i];
+					//print(CurrentGeneration[i].name + newChromosomes[i][0]);
 				}
 				
 				Generation++;
@@ -111,7 +120,7 @@ namespace GeneticAlgorithm
 		/// </summary>
 		/// <param name="individuals"></param>
 		/// <returns>選択した親の染色体(Chromosome)</returns>
-		protected abstract List<TGene> SelectChromosome(IList<Individual<TGene>> individuals);
+		protected abstract List<TGene>[] SelectChromosome(IList<Individual<TGene>> individuals);
 		
 		/// <summary>
 		/// 二つの染色体から新たな染色体を生成する
@@ -147,7 +156,45 @@ namespace GeneticAlgorithm
 				_list = list;
 			}
 		}
+
+		/// <summary>
+		/// ルーレット方式で選択する
+		/// 各個体に対応した選出率をあらかじめ決めておく必要がある
+		/// </summary>
+		/// <param name="individuals">固体のリスト</param>
+		/// <param name="rates">個体に対応した選出率</param>
+		/// <returns>選択した個体の染色体</returns>
+		protected static List<TGene>[] SelectRoulette(IList<Individual<TGene>> individuals, IList<float> rates, float rangeRate)
+		{
+			var val = UnityEngine.Random.Range(0f,rangeRate);
+			var totalRate = 0.0f;
+			var ret = new List<TGene>[2];
+			
+			for (var i = 0; i < 2; i++)
+			{
+				for (var j = 0; j < individuals.Count; j++)
+				{
+					totalRate += rates[j];
+					if (totalRate >= val)
+					{
+						ret[i] = individuals[j].Chromosome;
+						print("select:" + j);
+						break;
+					}
+				}
+			}
+
+			return ret;
+		}
+
+		/// <summary>
+		/// エリート方式で選択する
+		/// </summary>
+		/// <param name="individuals"></param>
+		/// <returns></returns>
+		protected static List<TGene>[] SelectElite(IList<Individual<TGene>> individuals)
+		{
+			return new []{ individuals[0].Chromosome, individuals[1].Chromosome};
+		}
 	}
-	
-	
 }

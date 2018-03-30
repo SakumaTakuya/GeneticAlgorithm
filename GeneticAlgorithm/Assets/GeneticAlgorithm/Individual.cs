@@ -28,14 +28,14 @@ namespace GeneticAlgorithm
         public IEnumerator Play(IList<Individual<TGene>> results)
         {
 //            print("Play");
-            Reset();
+            ResetIndividual();
             Fitness = 0;
             foreach (var gene in Chromosome)
             {
                 _next = false;
                 do
                 {
-                    Fitness += Action(gene);
+                    Fitness += Phenotype(gene);
                     yield return null;
                 } while (!_next);
             }
@@ -52,14 +52,14 @@ namespace GeneticAlgorithm
         /// <summary>
         /// キャラクタの初期位置などの定義が必要であればここに書く
         /// </summary>
-        protected abstract void Reset();
+        protected abstract void ResetIndividual();
         
         /// <summary>
         /// 実際に各個体に行わせる行動を定義する
         /// </summary>
         /// <param name="gene">行動を抽象化した遺伝子</param>
         /// <returns>行動の結果として得られた報酬</returns> 
-        protected abstract float Action(TGene gene);
+        protected abstract float Phenotype(TGene gene);
 
     }
 }
